@@ -23,6 +23,13 @@ It currently shows some vulnerabilities from [SCSVS v2](https://github.com/Compo
 - Allows burning tokens on the source chain and minting the same amount on the destination chain.
 - Allows transferring tokens on the destination chain to a new address on the destination chain itself.
 - Demonstrates chain ID spoofing in the bridge implementation.
+
+**BridgeHashCollision**
+- Does not use the EIP-712 standard.
+- Allows burning tokens on the source chain and minting the same amount on the destination chain.
+- Allows transferring tokens on the destination chain to a new address on the destination chain itself.
+- Demonstrates hash collision.
+
 ---
 ## **Vuln Explanation**:  
 ToDo: *Add explanation for every test/vulnerabilities.*

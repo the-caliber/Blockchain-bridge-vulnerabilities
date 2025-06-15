@@ -12,10 +12,7 @@ contract BridgeSpoofChainIdTest is Test {
     SignalProcessor signalProcessor;
     address owner = address(0x1);
     address user = address(0x2);
-    address token = address(0x3);
     uint256 staticFee = 0.0001 ether;
-
-    bytes32 DOMAIN_SEPARATOR;
 
     function setUp() public {
         vm.startPrank(owner);
@@ -23,16 +20,6 @@ contract BridgeSpoofChainIdTest is Test {
         bridge = new BridgeSpoofChainId(owner, address(signalProcessor));
         destBridge = new BridgeSpoofChainId(owner, address(signalProcessor));
         vm.stopPrank();
-        
-        DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes("BridgeSpoofChainId")),
-                keccak256(bytes("1")),
-                block.chainid,
-                address(bridge)
-            )
-        );
     }
 
     function test_chain_id_validation() public {

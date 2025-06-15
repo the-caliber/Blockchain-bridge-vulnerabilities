@@ -11,7 +11,6 @@ contract BridgeSignatureReplayTest is Test {
     SignalProcessor signalProcessor;
     address owner = address(0x1);
     address user = address(0x1ABC);
-    address token = address(0x3);
     uint256 staticFee = 0.0001 ether;
 
     function setUp() public {

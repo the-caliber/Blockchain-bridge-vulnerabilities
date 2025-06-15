@@ -12,9 +12,7 @@ contract BridgeSendTokenSafeTest is Test {
     SignalProcessor signalProcessor;
     address owner = address(0x1);
     address user = address(0x2);
-    address token = address(0x3);
     uint256 staticFee = 0.0001 ether;
-    bytes32 DOMAIN_SEPARATOR;
 
     function setUp() public {
         vm.startPrank(owner);
@@ -22,16 +20,6 @@ contract BridgeSendTokenSafeTest is Test {
         bridgeSafe = new BridgeSendTokenSafe(owner, address(signalProcessor));
         bridgeSafeDest = new BridgeSendTokenSafe(owner, address(signalProcessor));
         vm.stopPrank();
-
-        DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes("BridgeSafe")),
-                keccak256(bytes("1")),
-                block.chainid,
-                address(bridgeSafe)
-            )
-        );
     }
 
     function test_sendMsg() public {
@@ -265,7 +253,7 @@ contract BridgeSendTokenSafeTest is Test {
         IBridge.Transaction memory transaction = IBridge.Transaction({
             id: bridgeSafe.messageId(),
             from: alice,
-            to: token,
+            to: user,
             value: 1 ether,
             srcChainId: block.chainid,
             dstChainId: 2,
@@ -287,7 +275,7 @@ contract BridgeSendTokenSafeTest is Test {
             )
         );
 
-        bytes32 messageHash = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
+        bytes32 messageHash = keccak256(abi.encodePacked("\x19\x01", bridgeSafe.getDomainSeparator(), structHash));
 
         // Sign the message
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, messageHash);
