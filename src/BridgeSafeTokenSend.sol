@@ -14,7 +14,8 @@ contract BridgeSendTokenSafe is ReentrancyGuard, Ownable, IBridge, EIP712, Bridg
     string private constant SIGNING_DOMAIN = "BridgeSafe";
     string private constant SIGNATURE_VERSION = "1";
 
-    constructor(address initialOwner, address _signalProcessor) BridgeToken(initialOwner) 
+    constructor(address initialOwner, address _signalProcessor)
+        BridgeToken(initialOwner)
         EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION)
     {
         paused = false;
@@ -29,9 +30,9 @@ contract BridgeSendTokenSafe is ReentrancyGuard, Ownable, IBridge, EIP712, Bridg
 
     bool public paused;
     address signalProcessor;
-    uint256 public constant MAX_TRANSFER_AMOUNT = 1000000 * 10**18;
+    uint256 public constant MAX_TRANSFER_AMOUNT = 1000000 * 10 ** 18;
     uint256 public staticFee = 0.0001 ether;
-    
+
     enum MsgStatus {
         UnProcessed,
         Processed,
@@ -39,7 +40,6 @@ contract BridgeSendTokenSafe is ReentrancyGuard, Ownable, IBridge, EIP712, Bridg
     }
 
     mapping(bytes32 => MsgStatus) public msgStatus;
-
 
     bytes32 private constant TRANSACTION_TYPEHASH = keccak256(
         "Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"
@@ -58,7 +58,10 @@ contract BridgeSendTokenSafe is ReentrancyGuard, Ownable, IBridge, EIP712, Bridg
         transaction.from = msg.sender;
         transaction.id = messageId++;
 
-        require(transaction.srcChainId != transaction.dstChainId, "Bridge: source and destination chain IDs must be different");
+        require(
+            transaction.srcChainId != transaction.dstChainId,
+            "Bridge: source and destination chain IDs must be different"
+        );
 
         bytes32 messageHash = keccak256(abi.encode(transaction));
 
@@ -72,35 +75,37 @@ contract BridgeSendTokenSafe is ReentrancyGuard, Ownable, IBridge, EIP712, Bridg
                 _burn(transaction.from, valueToTransfer);
             }
         }
-        
 
         emit TxInitiated(transaction, messageHash);
     }
 
-    function sendMsgPermit(
-        Transaction memory transaction,
-        bytes memory signature
-    ) external payable nonReentrant {
+    function sendMsgPermit(Transaction memory transaction, bytes memory signature) external payable nonReentrant {
         require(!paused, "Bridge: paused");
         require(transaction.value <= MAX_TRANSFER_AMOUNT, "Bridge: amount too large");
         require(msg.value == transaction.value + staticFee, "Bridge: insufficient or different value sent");
 
         transaction.srcChainId = block.chainid;
         transaction.id = messageId++;
-        
-        require(transaction.srcChainId != transaction.dstChainId, "Bridge: source and destination chain IDs must be different");
 
-        bytes32 transactionHash = _hashTypedDataV4(keccak256(abi.encode(
-            TRANSACTION_TYPEHASH,
-            transaction.id,
-            transaction.from,
-            transaction.to,
-            transaction.value,
-            transaction.srcChainId,
-            transaction.dstChainId,
-            keccak256(transaction.data)
-        )));
+        require(
+            transaction.srcChainId != transaction.dstChainId,
+            "Bridge: source and destination chain IDs must be different"
+        );
 
+        bytes32 transactionHash = _hashTypedDataV4(
+            keccak256(
+                abi.encode(
+                    TRANSACTION_TYPEHASH,
+                    transaction.id,
+                    transaction.from,
+                    transaction.to,
+                    transaction.value,
+                    transaction.srcChainId,
+                    transaction.dstChainId,
+                    keccak256(transaction.data)
+                )
+            )
+        );
 
         address signer = ECDSA.recover(transactionHash, signature);
         require(signer == transaction.from, "Bridge: invalid signature");
@@ -129,10 +134,12 @@ contract BridgeSendTokenSafe is ReentrancyGuard, Ownable, IBridge, EIP712, Bridg
 
         require(msgStatus[messageHash] == MsgStatus.UnProcessed, "Bridge: message not initiated");
         require(!processedMessages[messageHash], "Bridge: message already processed");
-        require(block.chainid == transaction.dstChainId, "Bridge: block.chainid and destination chain IDs must be similar");
+        require(
+            block.chainid == transaction.dstChainId, "Bridge: block.chainid and destination chain IDs must be similar"
+        );
 
         processedMessages[messageHash] = true;
-        require(ISignalProcessor(signalProcessor).verifyTx(messageHash),"Bridge: transaction was not verified");
+        require(ISignalProcessor(signalProcessor).verifyTx(messageHash), "Bridge: transaction was not verified");
 
         if (transaction.to == address(0) || transaction.to == address(this)) {
             if (bytes4(transaction.data) == this.transfer.selector) {
@@ -144,7 +151,7 @@ contract BridgeSendTokenSafe is ReentrancyGuard, Ownable, IBridge, EIP712, Bridg
                 _mint(transaction.from, value);
             }
         } else {
-            (bool success, ) = recipient.call{value: amount}(transaction.data);
+            (bool success,) = recipient.call{value: amount}(transaction.data);
             require(success, "Bridge: Execution failed");
         }
 
@@ -166,5 +173,4 @@ contract BridgeSendTokenSafe is ReentrancyGuard, Ownable, IBridge, EIP712, Bridg
         paused = false;
         emit BridgeUnpaused();
     }
-
 }

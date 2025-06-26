@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../src/BridgeSignatureReplay.sol";
 import "../src/IBridge.sol";
 import "../src/SignalProcessor.sol";
+
 contract BridgeSignatureReplayTest is Test {
     BridgeSignatureReplay bridge;
     BridgeSignatureReplay destBridge;
@@ -137,7 +138,6 @@ contract BridgeSignatureReplayTest is Test {
         vm.prank(owner);
         destBridge.mint(alice, 100 ether);
 
-
         IBridge.Transaction memory transaction = IBridge.Transaction({
             id: bridge.messageId(),
             from: alice,
@@ -150,9 +150,7 @@ contract BridgeSignatureReplayTest is Test {
         });
 
         bytes32 messageHash = keccak256(abi.encode(transaction));
-        bytes32 ethSignedMessageHash = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
-        );
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
         // console.log("ethSignedMessageHash: "); console.logBytes32(ethSignedMessageHash);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, ethSignedMessageHash);
 
@@ -160,11 +158,10 @@ contract BridgeSignatureReplayTest is Test {
         vm.deal(user, 2 ether);
         vm.prank(user);
         bridge.sendMsgPermit{value: staticFee}(transaction, v, r, s);
-        
-        
+
         assertEq(destBridge.balanceOf(user), 0, "User should have 0 tokens");
         assertEq(destBridge.balanceOf(alice), 100 ether, "Alice should have 100e18 tokens left");
-        
+
         destBridge.executeMessage(transaction);
 
         assertEq(destBridge.balanceOf(user), 50 ether, "User should have 50e18 tokens");
@@ -194,9 +191,7 @@ contract BridgeSignatureReplayTest is Test {
         });
 
         bytes32 messageHash = keccak256(abi.encode(transaction));
-        bytes32 ethSignedMessageHash = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
-        );
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
         // console.log("ethSignedMessageHash: "); console.logBytes32(ethSignedMessageHash);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, ethSignedMessageHash);
 
@@ -205,17 +200,17 @@ contract BridgeSignatureReplayTest is Test {
         vm.prank(user);
         bridge.sendMsgPermit{value: staticFee}(transaction, v, r, s);
 
-        uint prevChainId = block.chainid; //console.log("block.chainid", prevChainId);
+        uint256 prevChainId = block.chainid; //console.log("block.chainid", prevChainId);
         vm.chainId(2);
         assertNotEq(prevChainId, block.chainid);
         BridgeSignatureReplay destBridgeOnChainId2 = new BridgeSignatureReplay(owner, address(signalProcessor));
-        
+
         vm.prank(owner);
         destBridgeOnChainId2.mint(alice, 100 ether);
-        
+
         assertEq(destBridgeOnChainId2.balanceOf(user), 0, "User should have 0e18 tokens");
         assertEq(destBridgeOnChainId2.balanceOf(alice), 100 ether, "Alice should have 100e18 tokens left");
-        
+
         destBridgeOnChainId2.executeMessage(transaction);
 
         assertEq(destBridgeOnChainId2.balanceOf(user), 50 ether, "User should have 50e18 tokens");

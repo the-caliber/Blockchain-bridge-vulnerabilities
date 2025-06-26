@@ -15,7 +15,9 @@ contract BridgeSpoofChainId is ReentrancyGuard, Ownable, IBridge, EIP712, Bridge
     string private constant SIGNING_DOMAIN = "BridgeSpoofingChainId";
     string private constant SIGNATURE_VERSION = "1";
     mapping(uint256 => bool) public allowedSrcChains;
-    constructor(address initialOwner, address _signalProcessor) BridgeToken(initialOwner) 
+
+    constructor(address initialOwner, address _signalProcessor)
+        BridgeToken(initialOwner)
         EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION)
     {
         paused = false;
@@ -30,9 +32,9 @@ contract BridgeSpoofChainId is ReentrancyGuard, Ownable, IBridge, EIP712, Bridge
 
     bool public paused;
     address signalProcessor;
-    uint256 public constant MAX_TRANSFER_AMOUNT = 1000000 * 10**18;
+    uint256 public constant MAX_TRANSFER_AMOUNT = 1000000 * 10 ** 18;
     uint256 public staticFee = 0.0001 ether;
-    
+
     enum MsgStatus {
         UnProcessed,
         Processed,
@@ -40,7 +42,6 @@ contract BridgeSpoofChainId is ReentrancyGuard, Ownable, IBridge, EIP712, Bridge
     }
 
     mapping(bytes32 => MsgStatus) public msgStatus;
-
 
     bytes32 private constant TRANSACTION_TYPEHASH = keccak256(
         "Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"
@@ -58,7 +59,10 @@ contract BridgeSpoofChainId is ReentrancyGuard, Ownable, IBridge, EIP712, Bridge
         require(!paused, "Bridge: paused");
         require(transaction.value <= MAX_TRANSFER_AMOUNT, "Bridge: amount too large");
         require(msg.value == transaction.value + staticFee, "Bridge: insufficient or different value sent");
-        require(transaction.srcChainId != transaction.dstChainId, "Bridge: source and destination chain IDs must be different");
+        require(
+            transaction.srcChainId != transaction.dstChainId,
+            "Bridge: source and destination chain IDs must be different"
+        );
 
         // transaction.srcChainId = block.chainid;
         transaction.from = msg.sender;
@@ -76,35 +80,37 @@ contract BridgeSpoofChainId is ReentrancyGuard, Ownable, IBridge, EIP712, Bridge
                 _burn(transaction.from, valueToTransfer);
             }
         }
-        
 
         emit TxInitiated(transaction, messageHash);
     }
 
-    function sendMsgPermit(
-        Transaction memory transaction,
-        bytes memory signature
-    ) external payable nonReentrant {
+    function sendMsgPermit(Transaction memory transaction, bytes memory signature) external payable nonReentrant {
         require(!paused, "Bridge: paused");
         require(transaction.value <= MAX_TRANSFER_AMOUNT, "Bridge: amount too large");
         require(msg.value == transaction.value + staticFee, "Bridge: insufficient or different value sent");
 
         // transaction.srcChainId = block.chainid;
         transaction.id = messageId++;
-        
-        require(transaction.srcChainId != transaction.dstChainId, "Bridge: source and destination chain IDs must be different");
 
-        bytes32 transactionHash = _hashTypedDataV4(keccak256(abi.encode(
-            TRANSACTION_TYPEHASH,
-            transaction.id,
-            transaction.from,
-            transaction.to,
-            transaction.value,
-            transaction.srcChainId,
-            transaction.dstChainId,
-            keccak256(transaction.data)
-        )));
+        require(
+            transaction.srcChainId != transaction.dstChainId,
+            "Bridge: source and destination chain IDs must be different"
+        );
 
+        bytes32 transactionHash = _hashTypedDataV4(
+            keccak256(
+                abi.encode(
+                    TRANSACTION_TYPEHASH,
+                    transaction.id,
+                    transaction.from,
+                    transaction.to,
+                    transaction.value,
+                    transaction.srcChainId,
+                    transaction.dstChainId,
+                    keccak256(transaction.data)
+                )
+            )
+        );
 
         address signer = ECDSA.recover(transactionHash, signature);
         require(signer == transaction.from, "Bridge: invalid signature");
@@ -135,9 +141,8 @@ contract BridgeSpoofChainId is ReentrancyGuard, Ownable, IBridge, EIP712, Bridge
         require(!processedMessages[messageHash], "Bridge: message already processed");
         require(allowedSrcChains[transaction.srcChainId], "Bridge: source chain not allowed");
 
-
         processedMessages[messageHash] = true;
-        require(ISignalProcessor(signalProcessor).verifyTx(messageHash),"Bridge: transaction was not verified");
+        require(ISignalProcessor(signalProcessor).verifyTx(messageHash), "Bridge: transaction was not verified");
 
         if (transaction.to == address(0) || transaction.to == address(this)) {
             if (bytes4(transaction.data) == this.transfer.selector) {
@@ -149,7 +154,7 @@ contract BridgeSpoofChainId is ReentrancyGuard, Ownable, IBridge, EIP712, Bridge
                 _mint(transaction.from, value);
             }
         } else {
-            (bool success, ) = recipient.call{value: amount}(transaction.data);
+            (bool success,) = recipient.call{value: amount}(transaction.data);
             require(success, "Bridge: Execution failed");
         }
 
@@ -171,5 +176,4 @@ contract BridgeSpoofChainId is ReentrancyGuard, Ownable, IBridge, EIP712, Bridge
         paused = false;
         emit BridgeUnpaused();
     }
-
 }

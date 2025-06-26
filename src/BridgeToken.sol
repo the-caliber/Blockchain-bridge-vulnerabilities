@@ -7,7 +7,7 @@ contract BridgeToken is ERC20, Ownable {
     event Minted(address indexed to, uint256 amount);
     event Burned(address indexed from, uint256 amount);
 
-    constructor( address initialOwner) ERC20("Bridge Token", "BTK") Ownable(initialOwner) {}
+    constructor(address initialOwner) ERC20("Bridge Token", "BTK") Ownable(initialOwner) {}
 
     // Vulnerable: No validation of minter role
     function mint(address to, uint256 amount) external onlyOwner {

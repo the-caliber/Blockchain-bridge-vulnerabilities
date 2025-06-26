@@ -22,11 +22,11 @@ contract BridgeSpoofChainIdTest is Test {
         vm.stopPrank();
     }
 
-    function test_chain_id_validation() public {
-       (address alice, uint256 alicePk) = makeAddrAndKey("alice");
+    function test_chain_
+        (address alice, uint256 alicePk) = makeAddrAndKey("alice");
         vm.startPrank(owner);
-        bridge.mint(alice,1 ether);
-        destBridge.mint(alice,1 ether);
+        bridge.mint(alice, 1 ether);
+        destBridge.mint(alice, 1 ether);
         vm.stopPrank();
 
         // Prepare transaction
@@ -44,7 +44,9 @@ contract BridgeSpoofChainIdTest is Test {
         // Generate EIP-712 hash
         bytes32 structHash = keccak256(
             abi.encode(
-                keccak256("Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"),
+                keccak256(
+                    "Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"
+                ),
                 transaction.id,
                 transaction.from,
                 transaction.to,
@@ -77,11 +79,11 @@ contract BridgeSpoofChainIdTest is Test {
         // Only src chain id 56 is allowed
         vm.prank(owner);
         destBridge.setAllowedSrcChain(56, true);
-        
-       (address alice, uint256 alicePk) = makeAddrAndKey("alice");
+
+        (address alice, uint256 alicePk) = makeAddrAndKey("alice");
         vm.startPrank(owner);
-        bridge.mint(alice,1 ether);
-        destBridge.mint(alice,1 ether);
+        bridge.mint(alice, 1 ether);
+        destBridge.mint(alice, 1 ether);
         vm.stopPrank();
 
         // Prepare transaction
@@ -99,7 +101,9 @@ contract BridgeSpoofChainIdTest is Test {
         // Generate EIP-712 hash
         bytes32 structHash = keccak256(
             abi.encode(
-                keccak256("Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"),
+                keccak256(
+                    "Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"
+                ),
                 transaction.id,
                 transaction.from,
                 transaction.to,
@@ -125,6 +129,10 @@ contract BridgeSpoofChainIdTest is Test {
 
         assert(destBridge.msgStatus(txHash) == BridgeSpoofChainId.MsgStatus.Processed);
         assertEq(1 ether, destBridge.balanceOf(user), "receiver's balance should be increased");
+        assertEq(0, destBridge.balanceOf(alice), "sender's balance should be decreased");
+    }
+}
+ance should be increased");
         assertEq(0, destBridge.balanceOf(alice), "sender's balance should be decreased");
     }
 

@@ -20,7 +20,7 @@ contract BridgeHashCollision is ReentrancyGuard, Ownable, BridgeToken {
 
     bool public paused;
     address signalProcessor;
-    uint256 public constant MAX_TRANSFER_AMOUNT = 1000000 * 10**18;
+    uint256 public constant MAX_TRANSFER_AMOUNT = 1000000 * 10 ** 18;
     uint256 public staticFee = 0.0001 ether;
 
     enum MsgStatus {
@@ -39,12 +39,7 @@ contract BridgeHashCollision is ReentrancyGuard, Ownable, BridgeToken {
         staticFee = fee;
     }
 
-    function sendMsg(
-        address to,
-        uint256 value,
-        uint256 dstChainId,
-        bytes memory data
-    ) external payable nonReentrant {
+    function sendMsg(address to, uint256 value, uint256 dstChainId, bytes memory data) external payable nonReentrant {
         require(!paused, "Bridge: paused");
         require(value <= MAX_TRANSFER_AMOUNT, "Bridge: amount too large");
         require(msg.value == value + staticFee, "Bridge: insufficient or different value sent");
@@ -112,9 +107,8 @@ contract BridgeHashCollision is ReentrancyGuard, Ownable, BridgeToken {
         uint256 dstChainId,
         bytes calldata data
     ) external nonReentrant {
-        require(!paused, "Bridge: paused");  
+        require(!paused, "Bridge: paused");
 
-            
         string memory idString = Strings.toString(id);
         string memory valueString = Strings.toString(value);
 
@@ -136,7 +130,7 @@ contract BridgeHashCollision is ReentrancyGuard, Ownable, BridgeToken {
                 _mint(from, val);
             }
         } else {
-            (bool success, ) = to.call{value: value}(data);
+            (bool success,) = to.call{value: value}(data);
             require(success, "Bridge: Execution failed");
         }
 

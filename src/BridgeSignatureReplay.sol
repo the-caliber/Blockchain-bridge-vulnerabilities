@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/utils/Bytes.sol";
 
 contract BridgeSignatureReplay is ReentrancyGuard, IBridge, BridgeToken {
     // Add constructor to initialize Ownable
-    constructor(address initialOwner, address _signalProcessor ) BridgeToken(initialOwner) {
+    constructor(address initialOwner, address _signalProcessor) BridgeToken(initialOwner) {
         paused = false;
         signalProcessor = _signalProcessor;
     }
@@ -23,12 +23,11 @@ contract BridgeSignatureReplay is ReentrancyGuard, IBridge, BridgeToken {
     uint256 public srcChainId;
     uint256 public dstChainId;
 
-
     bool public paused;
     address signalProcessor;
-    uint256 public constant MAX_TRANSFER_AMOUNT = 1000000 * 10**18;
+    uint256 public constant MAX_TRANSFER_AMOUNT = 1000000 * 10 ** 18;
     uint256 public staticFee = 0.0001 ether;
-    
+
     enum MsgStatus {
         UnProcessed,
         Processed,
@@ -37,13 +36,14 @@ contract BridgeSignatureReplay is ReentrancyGuard, IBridge, BridgeToken {
 
     mapping(bytes32 => MsgStatus) public msgStatus;
 
-    function sendMsg(
-        Transaction memory transaction
-    ) external payable nonReentrant {
+    function sendMsg(Transaction memory transaction) external payable nonReentrant {
         require(!paused, "Bridge: paused");
         require(transaction.value <= MAX_TRANSFER_AMOUNT, "Bridge: amount too large");
         require(msg.value == transaction.value + staticFee, "Bridge: insufficient or different value sent");
-        require(transaction.srcChainId != transaction.dstChainId, "Bridge: source and destination chain IDs must be different");
+        require(
+            transaction.srcChainId != transaction.dstChainId,
+            "Bridge: source and destination chain IDs must be different"
+        );
 
         transaction.srcChainId = block.chainid;
         transaction.from = msg.sender;
@@ -65,24 +65,24 @@ contract BridgeSignatureReplay is ReentrancyGuard, IBridge, BridgeToken {
         emit TxInitiated(transaction, transactionHash);
     }
 
-    function sendMsgPermit(
-        Transaction memory transaction,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external payable nonReentrant {
+    function sendMsgPermit(Transaction memory transaction, uint8 v, bytes32 r, bytes32 s)
+        external
+        payable
+        nonReentrant
+    {
         require(!paused, "Bridge: paused");
         require(transaction.value <= MAX_TRANSFER_AMOUNT, "Bridge: amount too large");
         require(msg.value == transaction.value + staticFee, "Bridge: insufficient or different value sent");
-        require(transaction.srcChainId != transaction.dstChainId, "Bridge: source and destination chain IDs must be different");
+        require(
+            transaction.srcChainId != transaction.dstChainId,
+            "Bridge: source and destination chain IDs must be different"
+        );
 
         // transaction.srcChainId = block.chainid; // Shows cross chain signature replay vulnerability. similar to the problems arises because of not using domain separator in EIP712, which uses the chainId as part of the hash.
         // transaction.id = messageId++; // Shows signature replay vulnerability.
 
         bytes32 transactionHash = keccak256(abi.encode(transaction)); // Generate a unique hash for the transaction
-        bytes32 ethSignedMessageHash = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n32", transactionHash)
-        );
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", transactionHash));
 
         // Recover the signer from v, r, s and ensure it matches transaction.from
         address signer = ecrecover(ethSignedMessageHash, v, r, s);
@@ -102,10 +102,7 @@ contract BridgeSignatureReplay is ReentrancyGuard, IBridge, BridgeToken {
         emit TxInitiated(transaction, transactionHash);
     }
 
-
-    function executeMessage(
-        Transaction calldata transaction
-    ) external nonReentrant {
+    function executeMessage(Transaction calldata transaction) external nonReentrant {
         require(!paused, "Bridge: paused");
 
         address recipient = transaction.to; // Assuming `to` is the recipient address
@@ -117,7 +114,7 @@ contract BridgeSignatureReplay is ReentrancyGuard, IBridge, BridgeToken {
         require(!processedMessages[messageHash], "Bridge: message already processed");
 
         // processedMessages[messageHash] = true;
-        require(ISignalProcessor(signalProcessor).verifyTx(messageHash),"Bridge: transaction was not verified"); // Call the processService function to verify the transaction
+        require(ISignalProcessor(signalProcessor).verifyTx(messageHash), "Bridge: transaction was not verified"); // Call the processService function to verify the transaction
 
         // Additional logic can be added here to handle `transaction`
         if (transaction.to == address(0) || transaction.to == address(this)) {
@@ -130,7 +127,7 @@ contract BridgeSignatureReplay is ReentrancyGuard, IBridge, BridgeToken {
                 _mint(transaction.from, value);
             }
         } else {
-            (bool success, ) = recipient.call{value: amount}(transaction.data);
+            (bool success,) = recipient.call{value: amount}(transaction.data);
             require(success, "Bridge: Execution failed");
         }
 

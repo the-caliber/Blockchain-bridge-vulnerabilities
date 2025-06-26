@@ -44,10 +44,12 @@ contract BridgeSendTokenSafeTest is Test {
         vm.deal(address(bridgeSafeDest), 1 ether);
 
         bridgeSafeDest.executeMessage(transaction);
-        
+
         assertEq(address(bridgeSafeDest).balance, 0, "Bridge should have 0 ETH left");
         assertEq(address(bridgeSafe).balance, 1 ether + staticFee, "Bridge should have 1 ETH + staticFee left");
-        assertEq(address(user).balance, 1 ether + (1 ether - staticFee), "User should have received 1 ETH on dest chain");
+        assertEq(
+            address(user).balance, 1 ether + (1 ether - staticFee), "User should have received 1 ETH on dest chain"
+        );
     }
 
     function test_sendMsg_transfer() public {
@@ -72,7 +74,7 @@ contract BridgeSendTokenSafeTest is Test {
         vm.chainId(2);
 
         bridgeSafeDest.executeMessage(transaction);
-        
+
         assertEq(address(bridgeSafeDest).balance, 0, "Bridge should have 0 ETH left");
         assertEq(address(bridgeSafe).balance, staticFee, "Bridge should have staticFee left");
         assertEq(bridgeSafeDest.balanceOf(user), 1 ether, "the user should have 1 token on dest chain");
@@ -96,7 +98,9 @@ contract BridgeSendTokenSafeTest is Test {
         // Generate EIP-712 hash
         bytes32 structHash = keccak256(
             abi.encode(
-                keccak256("Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"),
+                keccak256(
+                    "Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"
+                ),
                 transaction.id,
                 transaction.from,
                 transaction.to,
@@ -133,14 +137,16 @@ contract BridgeSendTokenSafeTest is Test {
         assert(bridgeSafeDest.msgStatus(txHash) == BridgeSendTokenSafe.MsgStatus.Processed);
         assertEq(address(bridgeSafeDest).balance, 0, "Bridge should have 0 ETH left");
         assertEq(address(bridgeSafe).balance, 1 ether + staticFee, "Bridge should have 1 ETH + staticFee left");
-        assertEq(address(user).balance, 1 ether + (1 ether - staticFee), "User should have received 1 ETH on dest chain");
+        assertEq(
+            address(user).balance, 1 ether + (1 ether - staticFee), "User should have received 1 ETH on dest chain"
+        );
     }
 
     function test_sendMsgPermit_transfer() public {
         (address alice, uint256 alicePk) = makeAddrAndKey("alice");
         vm.startPrank(owner);
-        bridgeSafe.mint(alice,1 ether);
-        bridgeSafeDest.mint(alice,1 ether);
+        bridgeSafe.mint(alice, 1 ether);
+        bridgeSafeDest.mint(alice, 1 ether);
         vm.stopPrank();
 
         // Prepare transaction
@@ -158,7 +164,9 @@ contract BridgeSendTokenSafeTest is Test {
         // Generate EIP-712 hash
         bytes32 structHash = keccak256(
             abi.encode(
-                keccak256("Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"),
+                keccak256(
+                    "Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"
+                ),
                 transaction.id,
                 transaction.from,
                 transaction.to,
@@ -196,7 +204,7 @@ contract BridgeSendTokenSafeTest is Test {
     function test_sendMsgPermit_mint() public {
         (address alice, uint256 alicePk) = makeAddrAndKey("alice");
         vm.startPrank(owner);
-        bridgeSafe.mint(alice,1 ether);
+        bridgeSafe.mint(alice, 1 ether);
         vm.stopPrank();
 
         // Prepare transaction
@@ -214,7 +222,9 @@ contract BridgeSendTokenSafeTest is Test {
         // Generate EIP-712 hash
         bytes32 structHash = keccak256(
             abi.encode(
-                keccak256("Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"),
+                keccak256(
+                    "Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"
+                ),
                 transaction.id,
                 transaction.from,
                 transaction.to,
@@ -264,7 +274,9 @@ contract BridgeSendTokenSafeTest is Test {
         // Generate EIP-712 hash
         bytes32 structHash = keccak256(
             abi.encode(
-                keccak256("Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"),
+                keccak256(
+                    "Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"
+                ),
                 transaction.id,
                 transaction.from,
                 transaction.to,
@@ -297,8 +309,8 @@ contract BridgeSendTokenSafeTest is Test {
     function test_InvalidSignature() public {
         (address alice, uint256 alicePk) = makeAddrAndKey("alice");
         vm.startPrank(owner);
-        bridgeSafe.mint(alice,1 ether);
-        bridgeSafeDest.mint(alice,1 ether);
+        bridgeSafe.mint(alice, 1 ether);
+        bridgeSafeDest.mint(alice, 1 ether);
         vm.stopPrank();
 
         // Prepare transaction
@@ -318,7 +330,9 @@ contract BridgeSendTokenSafeTest is Test {
         // Generate EIP-712 hash
         bytes32 structHash = keccak256(
             abi.encode(
-                keccak256("Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"),
+                keccak256(
+                    "Transaction(uint256 id,address from,address to,uint256 value,uint256 srcChainId,uint256 dstChainId,bytes data)"
+                ),
                 transaction.id,
                 transaction.from,
                 transaction.to,
@@ -341,5 +355,4 @@ contract BridgeSendTokenSafeTest is Test {
         vm.expectRevert("Bridge: invalid signature");
         bridgeSafe.sendMsgPermit{value: staticFee}(transaction, signature);
     }
-
 }

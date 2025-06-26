@@ -27,26 +27,36 @@ contract BridgeHashCollisionTest is Test {
         for (uint256 i = 1; i <= 12; i++) {
             uint256 value = (i == 12) ? 20000000000000000 : 120000000000000000;
             IBridge.Transaction memory transaction = IBridge.Transaction({
-            id: bridge.messageId(),
-            from: user,
-            to: user,
-            value: value,
-            srcChainId: block.chainid,
-            dstChainId: 2,
-            data: bytes("0"),
-            repayAddr: address(0)
+                id: bridge.messageId(),
+                from: user,
+                to: user,
+                value: value,
+                srcChainId: block.chainid,
+                dstChainId: 2,
+                data: bytes("0"),
+                repayAddr: address(0)
             });
 
             vm.prank(user);
-            bridge.sendMsg{value: transaction.value + staticFee}(transaction.to, transaction.value, transaction.dstChainId, transaction.data);
+            bridge.sendMsg{value: transaction.value + staticFee}(
+                transaction.to, transaction.value, transaction.dstChainId, transaction.data
+            );
 
             vm.chainId(2);
 
             // Mimic user's stored ETH on the bridge contract
             vm.deal(address(destBridge), 2 ether);
 
-            if(i == 12) vm.expectRevert("Bridge: message already processed");
-            destBridge.executeMessage(transaction.id, transaction.from, transaction.to, transaction.value, transaction.srcChainId, transaction.dstChainId, transaction.data);
+            if (i == 12) vm.expectRevert("Bridge: message already processed");
+            destBridge.executeMessage(
+                transaction.id,
+                transaction.from,
+                transaction.to,
+                transaction.value,
+                transaction.srcChainId,
+                transaction.dstChainId,
+                transaction.data
+            );
 
             vm.chainId(transaction.srcChainId);
         }
