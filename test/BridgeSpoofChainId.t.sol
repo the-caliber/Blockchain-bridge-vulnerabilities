@@ -22,7 +22,7 @@ contract BridgeSpoofChainIdTest is Test {
         vm.stopPrank();
     }
 
-    function test_chain_
+    function test_chain_id_validation() public {
         (address alice, uint256 alicePk) = makeAddrAndKey("alice");
         vm.startPrank(owner);
         bridge.mint(alice, 1 ether);
@@ -131,9 +131,4 @@ contract BridgeSpoofChainIdTest is Test {
         assertEq(1 ether, destBridge.balanceOf(user), "receiver's balance should be increased");
         assertEq(0, destBridge.balanceOf(alice), "sender's balance should be decreased");
     }
-}
-ance should be increased");
-        assertEq(0, destBridge.balanceOf(alice), "sender's balance should be decreased");
-    }
-
 }
