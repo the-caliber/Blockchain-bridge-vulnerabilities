@@ -22,6 +22,7 @@ contract BridgeHashCollision is ReentrancyGuard, Ownable, BridgeToken {
     address signalProcessor;
     uint256 public constant MAX_TRANSFER_AMOUNT = 1000000 * 10 ** 18;
     uint256 public staticFee = 0.0001 ether;
+    uint256 public msgPacked;
 
     enum MsgStatus {
         UnProcessed,
@@ -51,6 +52,8 @@ contract BridgeHashCollision is ReentrancyGuard, Ownable, BridgeToken {
 
         require(srcChainId != dstChainId, "Bridge: source and destination chain IDs must be different");
 
+        // For vuln visuallisation in test
+        msgPacked = uint256(bytes32(abi.encodePacked(idString, valueString, from, to, srcChainId, dstChainId, data)));
         // Vulnerable: hash collision possible due to lack of struct typing
         bytes32 messageHash = keccak256(abi.encodePacked(idString, valueString, from, to, srcChainId, dstChainId, data));
 
