@@ -208,7 +208,7 @@ contract BridgeSignatureReplayTest is Test {
         vm.prank(owner);
         destBridgeOnChainId2.mint(alice, 100 ether);
 
-        assertEq(destBridgeOnChainId2.balanceOf(user), 0, "User should have 0e18 tokens");
+        assertEq(destBridgeOnChainId2.balanceOf(user), 0, "User should have 0 tokens");
         assertEq(destBridgeOnChainId2.balanceOf(alice), 100 ether, "Alice should have 100e18 tokens left");
 
         destBridgeOnChainId2.executeMessage(transaction);
@@ -216,9 +216,12 @@ contract BridgeSignatureReplayTest is Test {
         assertEq(destBridgeOnChainId2.balanceOf(user), 50 ether, "User should have 50e18 tokens");
         assertEq(destBridgeOnChainId2.balanceOf(alice), 50 ether, "Alice should have 50e18 tokens left");
 
-        // Signature replay on the chain id 2.
+        // Signature replay on the chain id 3.
+        vm.chainId(3);
         vm.prank(user);
         bridge.sendMsgPermit{value: staticFee}(transaction, v, r, s);
+
+        vm.chainId(2);
         destBridgeOnChainId2.executeMessage(transaction);
 
         assertEq(destBridgeOnChainId2.balanceOf(user), 100 ether, "User should have 100e18 tokens");
