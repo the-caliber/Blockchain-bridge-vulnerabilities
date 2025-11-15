@@ -111,7 +111,7 @@ contract BridgeSignatureReplay is ReentrancyGuard, IBridge, BridgeToken {
         bytes32 messageHash = keccak256(abi.encode(transaction)); // Generate a unique hash for the transaction
 
         require(msgStatus[messageHash] == MsgStatus.UnProcessed, "Bridge: message not initiated");
-        require(!processedMessages[messageHash], "Bridge: message already processed");
+        // require(!processedMessages[messageHash], "Bridge: message already processed");
 
         // processedMessages[messageHash] = true;
         require(ISignalProcessor(signalProcessor).verifyTx(messageHash), "Bridge: transaction was not verified"); // Call the processService function to verify the transaction
