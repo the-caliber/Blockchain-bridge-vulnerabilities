@@ -33,8 +33,24 @@ It currently shows some vulnerabilities from [SCSVS v2](https://github.com/Compo
 - Demonstrates hash collision.
 
 ---
-## **Vuln Explanation**:  
-ToDo: *Add explanation for every test/vulnerabilities.*
+## **Vulnerabilities Explanation**:  
+1. [**Intro & Part 1.**](https://www.calibersec.com/blockchain-bridge-security-intro-part-1/)  
+    - Overview  
+    - Vulnerabilities:  
+        - Message replay  
+        - Signature replay
+
+2. [**Part 2.**](https://www.calibersec.com/blockchain-bridge-security-part-2/)  
+    - Cross chain signature replay
+    - Variations of signature replay
+
+3. [**Part 3.**](https://www.calibersec.com/blockchain-bridge-security-part-3/)
+    - Arbitrary call execution
+
+4. [**Part 4.**](https://www.calibersec.com/blockchain-bridge-security-part-4/)
+    - Chain id spoofing
+    - Hash collision
+    - Lack of signature expiry check
 
 ## Usage
 
