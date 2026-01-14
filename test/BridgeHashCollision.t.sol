@@ -42,6 +42,9 @@ contract BridgeHashCollisionTest is Test {
                 transaction.to, transaction.value, transaction.dstChainId, transaction.data
             );
 
+            uint256 msgPack = bridge.msgPacked();
+            console.log("MSG %s", i, msgPack);
+
             vm.chainId(2);
 
             // Mimic user's stored ETH on the bridge contract
